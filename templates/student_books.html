@@ -1,0 +1,222 @@
+{% extends "student_base.html" %}
+
+{% block title %}Browse & Apply for Books | Athena Library{% endblock %}
+{% block page_title %}Library Catalog & Book Application{% endblock %}
+{% block page_subtitle %}Explore available academic titles and submit applications for book loans.{% endblock %}
+
+{% block content %}
+<!-- 1. STUDENT STATS OVERVIEW -->
+<div class="stats-grid">
+    <div class="stat-card card-teal">
+        <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">My Active Loans</span>
+            <h3 class="stat-value">{{ active_loans_count }}</h3>
+            <span class="stat-subtext">Books currently in your possession</span>
+        </div>
+    </div>
+
+    <div class="stat-card card-amber">
+        <div class="stat-icon"><i class="fa-solid fa-file-signature"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Pending Applications</span>
+            <h3 class="stat-value">{{ pending_apps_count }}</h3>
+            <span class="stat-subtext">Awaiting librarian review</span>
+        </div>
+    </div>
+
+    <div class="stat-card card-navy">
+        <div class="stat-icon"><i class="fa-solid fa-warehouse"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Available Titles</span>
+            <h3 class="stat-value">{{ total_available_titles }}</h3>
+            <span class="stat-subtext">Ready for checkout</span>
+        </div>
+    </div>
+</div>
+
+<!-- 2. SEARCH & CATEGORY FILTER -->
+<div class="content-card filter-card" style="margin-top: 24px;">
+    <form method="GET" action="{{ url_for('student_books') }}" class="search-form">
+        <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" name="search" class="form-control" placeholder="Search by title, author, or ISBN..." value="{{ search_query }}">
+        </div>
+
+        <div class="filter-select-wrapper">
+            <select name="category" class="form-control" onchange="this.form.submit()">
+                <option value="All" {% if selected_category == 'All' or not selected_category %}selected{% endif %}>All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-navy">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+
+        {% if search_query or (selected_category and selected_category != 'All') %}
+        <a href="{{ url_for('student_books') }}" class="btn btn-outline" title="Reset Filters">
+            <i class="fa-solid fa-xmark"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- 3. BOOKS CATALOG TABLE -->
+<div class="content-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-book"></i> Catalog Books ({{ books|length }})</h3>
+        <span class="badge badge-teal">Live Inventory</span>
+    </div>
+
+    <div class="card-body">
+        {% if books %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Book Title & Author</th>
+                        <th>Category</th>
+                        <th>ISBN</th>
+                        <th>Location</th>
+                        <th>Copies Available</th>
+                        <th style="text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                    {% set bid_str = book._id|string %}
+                    <tr>
+                        <td>
+                            <strong>{{ book.title }}</strong><br>
+                            <span class="text-muted"><i class="fa-solid fa-pen-nib"></i> {{ book.author }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-indigo">{{ book.category }}</span>
+                        </td>
+                        <td>
+                            <code class="isbn-tag">
+                                <i class="fa-solid fa-barcode"></i> {{ book.isbn }}
+                            </code>
+                        </td>
+                        <td>
+                            <span style="font-size: 12px; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> {{ book.shelf_location }}</span>
+                        </td>
+                        <td>
+                            {% if book.available_copies > 0 %}
+                                <span class="badge badge-teal"><i class="fa-solid fa-check"></i> {{ book.available_copies }} of {{ book.total_copies }} Available</span>
+                            {% else %}
+                                <span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> 0 Available (All Issued)</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if bid_str in issued_book_ids %}
+                                <span class="badge badge-teal" title="You currently have this book issued">
+                                    <i class="fa-solid fa-book-bookmark"></i> Borrowed
+                                </span>
+                            {% elif bid_str in pending_app_book_ids %}
+                                <span class="badge badge-amber" title="Application is awaiting review">
+                                    <i class="fa-solid fa-clock"></i> Applied
+                                </span>
+                            {% elif book.available_copies > 0 %}
+                                <button type="button" class="btn btn-sm btn-primary btn-apply-trigger"
+                                    data-book-id="{{ bid_str }}"
+                                    data-title="{{ book.title }}"
+                                    data-author="{{ book.author }}"
+                                    data-isbn="{{ book.isbn }}"
+                                    data-available="{{ book.available_copies }}">
+                                    <i class="fa-solid fa-file-pen"></i> Apply for Book
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-sm btn-disabled" disabled style="opacity: 0.6; cursor: not-allowed;">
+                                    Out of Stock
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-book-open" style="font-size: 48px; margin-bottom: 12px; color: var(--border-color);"></i>
+            <h3>No books found matching your query</h3>
+            <p>Try searching with a different keyword or resetting filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 4. APPLY FOR BOOK MODAL DIALOG -->
+<div id="applyModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 520px;">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-file-signature text-teal"></i> Apply for Book Loan</h3>
+            <button type="button" class="modal-close" onclick="closeModal('applyModal')">&times;</button>
+        </div>
+        
+        <form id="applyForm" method="POST" action="">
+            <div class="modal-body">
+                <div style="background: var(--table-header-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">Selected Book</div>
+                    <h4 id="modal_book_title" style="margin: 0 0 4px 0; color: var(--text-main); font-size: 15px;">Book Title</h4>
+                    <div id="modal_book_meta" style="font-size: 12px; color: var(--text-muted);">Author &bull; ISBN</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Applicant Student (You)</label>
+                    <input type="text" class="form-control" value="{{ session.get('student_name', 'Student') }} (ID: {{ session.get('student_id', '') }})" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="apply_days">Requested Duration *</label>
+                    <select id="apply_days" name="requested_days" class="form-control" required>
+                        <option value="7">7 Days (1 Week)</option>
+                        <option value="14" selected>14 Days (2 Weeks - Standard)</option>
+                        <option value="21">21 Days (3 Weeks)</option>
+                        <option value="30">30 Days (1 Month)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="apply_notes">Purpose / Note to Librarian (Optional)</label>
+                    <textarea id="apply_notes" name="notes" class="form-control" rows="3" placeholder="e.g. Needed for semester research project or practical viva exam."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('applyModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Application
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const applyButtons = document.querySelectorAll('.btn-apply-trigger');
+        applyButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const bookId = this.getAttribute('data-book-id');
+                const title = this.getAttribute('data-title');
+                const author = this.getAttribute('data-author');
+                const isbn = this.getAttribute('data-isbn');
+
+                document.getElementById('modal_book_title').textContent = title;
+                document.getElementById('modal_book_meta').innerHTML = '<i class="fa-solid fa-pen-nib"></i> ' + author + ' &bull; <i class="fa-solid fa-barcode"></i> ' + isbn;
+                document.getElementById('applyForm').action = "/student/apply/" + bookId;
+                
+                openModal('applyModal');
+            });
+        });
+    });
+</script>
+{% endblock %}
+

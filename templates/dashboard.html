@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Athena Library Management System{% endblock %}
+{% block page_title %}Library Overview Dashboard{% endblock %}
+{% block page_subtitle %}Overview of book inventory, active student loans, and recent circulation activity.{% endblock %}
+
+{% block header_actions %}
+<div class="action-btn-group">
+    <a href="{{ url_for('books_list') }}?open_add=true" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Add Book
+    </a>
+    <a href="{{ url_for('students_list') }}?open_add=true" class="btn btn-secondary">
+        <i class="fa-solid fa-user-plus"></i> Register Student
+    </a>
+    <a href="{{ url_for('issues_list') }}?open_add=true" class="btn btn-accent">
+        <i class="fa-solid fa-hand-holding-hand"></i> Issue Book
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- 1. STATISTIC METRIC CARDS -->
+<div class="stats-grid">
+    <div class="stat-card card-navy">
+        <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Total Book Titles</span>
+            <h3 class="stat-value">{{ total_books }}</h3>
+            <span class="stat-subtext">{{ total_copies_stock }} total physical copies</span>
+        </div>
+    </div>
+
+    <div class="stat-card card-teal">
+        <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Available Copies</span>
+            <h3 class="stat-value">{{ available_copies }}</h3>
+            <span class="stat-subtext">Ready on library shelves</span>
+        </div>
+    </div>
+
+    <div class="stat-card card-amber">
+        <div class="stat-icon"><i class="fa-solid fa-book-reader"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Currently Issued</span>
+            <h3 class="stat-value">{{ issued_count }}</h3>
+            <span class="stat-subtext">Currently issued books</span>
+        </div>
+    </div>
+
+    <div class="stat-card card-rose">
+        <div class="stat-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Overdue Books</span>
+            <h3 class="stat-value {% if overdue_count > 0 %}text-danger{% endif %}">{{ overdue_count }}</h3>
+            <span class="stat-subtext">Require return follow-up</span>
+        </div>
+    </div>
+
+    <div class="stat-card card-indigo">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">Registered Students</span>
+            <h3 class="stat-value">{{ total_students }}</h3>
+            <span class="stat-subtext">Active library patrons</span>
+        </div>
+    </div>
+</div>
+
+<!-- OPTIONAL: PENDING STUDENT APPLICATIONS NOTIFICATION -->
+{% if pending_applications_count and pending_applications_count > 0 %}
+<div class="content-card" style="margin-top: 24px; background: var(--warning-bg); border: 1px solid var(--warning-amber); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fa-solid fa-bell" style="font-size: 20px; color: var(--warning-amber);"></i>
+        <div>
+            <strong style="color: var(--text-main);">{{ pending_applications_count }} Pending Student Book Application(s)</strong>
+            <div style="font-size: 12px; color: var(--text-muted);">Students have submitted new book loan requests awaiting your approval.</div>
+        </div>
+    </div>
+    <a href="{{ url_for('issues_list') }}" class="btn btn-sm btn-navy">
+        <i class="fa-solid fa-list-check"></i> Review Applications
+    </a>
+</div>
+{% endif %}
+
+<!-- EMPTY STATE BANNER IF ZERO RECORDS -->
+{% if total_books == 0 and total_students == 0 %}
+<div class="empty-state-banner">
+    <div class="empty-icon"><i class="fa-solid fa-book-open"></i></div>
+    <h3>No Records in Library Catalog</h3>
+    <p>Your library catalog is currently empty. Get started by adding books to the catalog or registering new students.</p>
+    <div class="action-btn-group" style="justify-content: center; margin-top: 16px;">
+        <a href="{{ url_for('books_list') }}?open_add=true" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-plus"></i> Add First Book
+        </a>
+        <a href="{{ url_for('students_list') }}?open_add=true" class="btn btn-secondary btn-lg">
+            <i class="fa-solid fa-user-plus"></i> Register Student
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- 2. CHART & SUMMARY ROW -->
+{% if total_books > 0 %}
+<div class="grid-2-col" style="margin-top: 24px;">
+    <!-- Category Distribution Chart -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-chart-column"></i> Book Categories Distribution</h3>
+            <span class="badge badge-teal">By Category</span>
+        </div>
+        <div class="card-body">
+            <canvas id="categoryChart" height="220"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Summary Breakdown Table -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-layer-group"></i> Category Inventory Summary</h3>
+            <a href="{{ url_for('reports') }}" class="card-link">View Full Report &rarr;</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Titles</th>
+                            <th>Total Copies</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories_agg %}
+                        <tr>
+                            <td><strong>{{ cat._id }}</strong></td>
+                            <td><span class="badge badge-navy">{{ cat.count }}</span></td>
+                            <td>{{ cat.total_copies }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 3. RECENT ACTIVITY ROW -->
+<div class="grid-2-col" style="margin-top: 24px;">
+    <!-- Recently Added Books -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-book-medical"></i> Recently Added Books</h3>
+            <a href="{{ url_for('books_list') }}" class="card-link">View All Books &rarr;</a>
+        </div>
+        <div class="card-body">
+            {% if recent_books %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Available</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in recent_books %}
+                        <tr>
+                            <td><strong>{{ b.title }}</strong></td>
+                            <td>{{ b.author }}</td>
+                            <td><span class="tag-pill">{{ b.category }}</span></td>
+                            <td>
+                                <span class="badge {% if b.available_copies > 0 %}badge-available{% else %}badge-overdue{% endif %}">
+                                    {{ b.available_copies }} / {{ b.total_copies }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No books recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Loan Activity -->
+    <div class="content-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Loan Activity</h3>
+            <a href="{{ url_for('issues_list') }}" class="card-link">View All Loans &rarr;</a>
+        </div>
+        <div class="card-body">
+            {% if recent_issues %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Student</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for iss in recent_issues %}
+                        <tr>
+                            <td><strong>{{ iss.book_title }}</strong></td>
+                            <td>{{ iss.student_name }} <small>({{ iss.student_id }})</small></td>
+                            <td>{{ iss.due_date | pretty_date }}</td>
+                            <td>
+                                <span class="badge {% if iss.status == 'Returned' %}badge-returned{% else %}badge-issued{% endif %}">
+                                    {{ iss.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No book loan records yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if categories_agg %}
+<script>
+    // Render Category Distribution Chart using Chart.js with Theme Awareness
+    let categoryChartInstance = null;
+
+    function renderCategoryChart() {
+        const canvas = document.getElementById('categoryChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const labels = [{% for cat in categories_agg %}"{{ cat._id }}",{% endfor %}];
+        const dataCounts = [{% for cat in categories_agg %}{{ cat.count }},{% endfor %}];
+        const dataCopies = [{% for cat in categories_agg %}{{ cat.total_copies }},{% endfor %}];
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+        const barColor1 = isDark ? '#38bdf8' : '#0f2b48';
+        const barColor2 = isDark ? '#2dd4bf' : '#0d9488';
+
+        if (categoryChartInstance) {
+            categoryChartInstance.destroy();
+        }
+
+        categoryChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Book Titles',
+                        data: dataCounts,
+                        backgroundColor: barColor1,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Total Copies',
+                        data: dataCopies,
+                        backgroundColor: barColor2,
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: textColor }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: textColor },
+                        grid: { color: gridColor }
+                    }
+                }
+            }
+        });
+    }
+
+    renderCategoryChart();
+
+    // Re-render chart on theme change
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                renderCategoryChart();
+            }
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+{% endif %}
+{% endblock %}

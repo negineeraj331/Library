@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Books Management | Athena Library{% endblock %}
+{% block page_title %}Books Catalog Management{% endblock %}
+{% block page_subtitle %}Manage your library's complete book collection, inventory counts, and shelf locations.{% endblock %}
+
+{% block header_actions %}
+<button type="button" class="btn btn-primary" onclick="openModal('addBookModal')">
+    <i class="fa-solid fa-plus"></i> Add Book
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- FILTER & SEARCH BAR -->
+<div class="content-card filter-card">
+    <form method="GET" action="{{ url_for('books_list') }}" class="search-form">
+        <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" name="search" class="form-control" placeholder="Search by Title, Author, or ISBN..." value="{{ search_query }}">
+        </div>
+        
+        <div class="filter-select-wrapper">
+            <select name="category" class="form-control">
+                <option value="All">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-navy">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+        {% if search_query or selected_category %}
+        <a href="{{ url_for('books_list') }}" class="btn btn-outline" title="Reset Filters">
+            <i class="fa-solid fa-xmark"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- BOOKS TABLE -->
+<div class="content-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-book-open"></i> Catalog Records ({{ books|length }})</h3>
+        <span class="badge badge-teal">Catalog Inventory</span>
+    </div>
+    <div class="card-body">
+        {% if books %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>ISBN</th>
+                        <th>Category</th>
+                        <th>Year</th>
+                        <th>Total</th>
+                        <th>Available</th>
+                        <th>Shelf</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in books %}
+                    <tr>
+                        <td>
+                            <strong>{{ b.title }}</strong>
+                        </td>
+                        <td>{{ b.author }}</td>
+                        <td><code>{{ b.isbn }}</code></td>
+                        <td><span class="tag-pill">{{ b.category }}</span></td>
+                        <td>{{ b.publication_year }}</td>
+                        <td><strong>{{ b.total_copies }}</strong></td>
+                        <td>
+                            <span class="badge {% if b.available_copies > 0 %}badge-available{% else %}badge-overdue{% endif %}">
+                                {{ b.available_copies }} / {{ b.total_copies }}
+                            </span>
+                        </td>
+                        <td><span class="shelf-tag">{{ b.shelf_location }}</span></td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <!-- Issue Book Button (Fast Issue) -->
+                            {% if b.available_copies > 0 %}
+                            <button type="button" class="btn-action btn-issue" title="Issue This Book"
+                                data-book-id="{{ b._id }}"
+                                data-book-title="{{ b.title }}"
+                                data-book-isbn="{{ b.isbn }}"
+                                data-available="{{ b.available_copies }}"
+                                data-total="{{ b.total_copies }}"
+                                onclick="openDirectIssueModal(this)">
+                                <i class="fa-solid fa-hand-holding-hand"></i>
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn-action btn-disabled" disabled title="No copies available to issue">
+                                <i class="fa-solid fa-ban"></i>
+                            </button>
+                            {% endif %}
+
+                            <!-- Edit Button -->
+                            <button type="button" class="btn-action btn-edit" title="Edit Book"
+                                data-id="{{ b._id }}"
+                                data-title="{{ b.title }}"
+                                data-author="{{ b.author }}"
+                                data-isbn="{{ b.isbn }}"
+                                data-category="{{ b.category }}"
+                                data-year="{{ b.publication_year }}"
+                                data-copies="{{ b.total_copies }}"
+                                data-shelf="{{ b.shelf_location }}"
+                                onclick="openEditBookModalFromBtn(this)">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+
+                            <!-- Delete Form -->
+                            <form action="{{ url_for('delete_book', book_id=b._id) }}" method="POST" style="display: inline-block;"
+                                onsubmit="return confirm('Are you sure you want to delete this book?');">
+                                <button type="submit" class="btn-action btn-delete" title="Delete Book">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-book"></i>
+            <h4>No Books Found</h4>
+            <p>No books match your search or filter criteria. Click below to add a new book.</p>
+            <button type="button" class="btn btn-primary" onclick="openModal('addBookModal')">
+                <i class="fa-solid fa-plus"></i> Add Book
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Book Modal -->
+<div id="addBookModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-plus-circle"></i> Add Book</h3>
+            <button type="button" class="modal-close" onclick="closeModal('addBookModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_book') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Book Title *</label>
+                    <input type="text" name="title" class="form-control" required pattern=".*[a-zA-Z].*" title="Book title must contain alphabetical letters" placeholder="Enter book title">
+                    <small class="form-hint">Must contain alphabetical letters (cannot be only numbers).</small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Author(s) *</label>
+                        <input type="text" name="author" class="form-control" required pattern=".*[a-zA-Z].*" title="Author name must contain alphabetical letters" placeholder="Author name">
+                    </div>
+                    <div class="form-group col-6">
+                        <label>ISBN (Unique) *</label>
+                        <input type="text" name="isbn" class="form-control" required placeholder="e.g. 9780201633610">
+                        <small class="form-hint">Must be unique in library catalog.</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Category *</label>
+                        <input type="text" name="category" class="form-control" required pattern=".*[a-zA-Z].*" title="Category must contain letters" placeholder="e.g. Computer Science, Fiction">
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Publication Year *</label>
+                        <input type="number" name="publication_year" class="form-control" min="1000" max="2027" value="2025" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Total Copies *</label>
+                        <input type="number" name="total_copies" class="form-control" min="1" max="500" value="5" required>
+                        <small class="form-hint">Initially, available copies will equal total copies.</small>
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Shelf Location *</label>
+                        <input type="text" name="shelf_location" class="form-control" required placeholder="e.g. CS-A101">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addBookModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Add Book</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Book Modal -->
+<div id="editBookModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen-to-square"></i> Edit Book Details</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editBookModal')">&times;</button>
+        </div>
+        <form id="editBookForm" method="POST" action="">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Book Title *</label>
+                    <input type="text" id="edit_book_title" name="title" class="form-control" required pattern=".*[a-zA-Z].*" title="Book title must contain letters">
+                    <small class="form-hint">Must contain alphabetical letters.</small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Author(s) *</label>
+                        <input type="text" id="edit_book_author" name="author" class="form-control" required pattern=".*[a-zA-Z].*" title="Author name must contain letters">
+                    </div>
+                    <div class="form-group col-6">
+                        <label>ISBN *</label>
+                        <input type="text" id="edit_book_isbn" name="isbn" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Category *</label>
+                        <input type="text" id="edit_book_category" name="category" class="form-control" required pattern=".*[a-zA-Z].*" title="Category must contain letters">
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Publication Year *</label>
+                        <input type="number" id="edit_book_year" name="publication_year" class="form-control" min="1000" max="2027" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Total Copies *</label>
+                        <input type="number" id="edit_book_copies" name="total_copies" class="form-control" min="1" max="500" required>
+                        <small class="form-hint">Cannot be reduced below currently issued copy count.</small>
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Shelf Location *</label>
+                        <input type="text" id="edit_book_shelf" name="shelf_location" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editBookModal')">Cancel</button>
+                <button type="submit" class="btn btn-teal"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Issue This Book Modal -->
+<div id="directIssueModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-hand-holding-hand"></i> Issue Book to Student</h3>
+            <button type="button" class="modal-close" onclick="closeModal('directIssueModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_issue') }}" method="POST" onsubmit="return validateStudentSelection('direct')">
+            <input type="hidden" name="redirect_to" value="books">
+            <input type="hidden" id="direct_issue_book_ref" name="book_ref" value="">
+
+            <div class="modal-body">
+                <!-- Selected Book Details Card -->
+                <div style="background: var(--table-header-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;">
+                    <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--teal-primary);">Selected Book</span>
+                    <h4 id="direct_issue_display_title" style="margin: 4px 0 6px 0; font-size: 15px; color: var(--text-main);">—</h4>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-muted);">
+                        <span><i class="fa-solid fa-barcode"></i> ISBN: <code id="direct_issue_display_isbn" style="color: var(--teal-primary); font-weight: 600;">—</code></span>
+                        <span><i class="fa-solid fa-box-archive"></i> Available: <strong id="direct_issue_display_available" style="color: var(--teal-primary);">—</strong></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user-graduate"></i> Select Student *</label>
+
+                    <div class="student-search-container">
+                        <!-- Search & Input Box -->
+                        <div class="student-search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text"
+                                   id="direct_student_search_input"
+                                   class="form-control"
+                                   placeholder="Type Student ID (e.g. 1651...) or Name to search..."
+                                   autocomplete="off"
+                                   onfocus="openStudentDropdown('direct')"
+                                   oninput="filterStudentDropdown('direct')"
+                                   onkeydown="handleStudentKeydown(event, 'direct')">
+                            <button type="button"
+                                    id="direct_student_clear_btn"
+                                    class="clear-btn"
+                                    onclick="clearStudentSelection('direct')"
+                                    title="Clear selection">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Hidden Field holding MongoDB _id for Form Submission -->
+                        <input type="hidden" id="direct_student_ref" name="student_ref" required>
+
+                        <!-- Floating Dropdown Suggestions List -->
+                        <div id="direct_student_dropdown" class="student-dropdown-list">
+                            {% for s in students %}
+                            <div class="student-dropdown-item"
+                                 data-id="{{ s._id }}"
+                                 data-sid="{{ s.student_id }}"
+                                 data-name="{{ s.name }}"
+                                 data-course="{{ s.course }}"
+                                 data-phone="{{ s.contact }}"
+                                 data-email="{{ s.email }}"
+                                 onclick="selectStudentItem('direct', this)">
+                                <div>
+                                    <div class="student-info-name">{{ s.name }}</div>
+                                    <div class="student-info-sub">
+                                        <span><i class="fa-solid fa-graduation-cap"></i> {{ s.course }}</span>
+                                        <span><i class="fa-solid fa-phone"></i> {{ s.contact }}</span>
+                                    </div>
+                                </div>
+                                <span class="student-id-pill">ID: {{ s.student_id }}</span>
+                            </div>
+                            {% endfor %}
+                            <div id="direct_student_empty" class="student-dropdown-empty">
+                                <i class="fa-solid fa-circle-exclamation"></i> No student found matching "<span class="query-span"></span>"
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-hint">Type student ID or name to see all matches, then click any student to select.</small>
+
+                    <!-- Selected Student Confirmation Box -->
+                    <div id="direct_student_card" style="display: none; margin-top: 10px; background: var(--success-bg); border: 1px solid var(--success-green); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: var(--text-main);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div>
+                                <span style="font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; color: var(--teal-primary); margin-right: 6px;">SELECTED STUDENT</span>
+                                <strong data-field="name" style="font-size: 13.5px; color: var(--text-main);">—</strong>
+                            </div>
+                            <span data-field="sid" style="background: rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 12px; font-family: monospace; font-weight: 700; color: var(--teal-primary);">—</span>
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 14px;">
+                            <span><i class="fa-solid fa-graduation-cap"></i> <span data-field="course">—</span></span>
+                            <span><i class="fa-solid fa-phone"></i> <span data-field="phone">—</span></span>
+                            <span><i class="fa-solid fa-envelope"></i> <span data-field="email">—</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Issue Date *</label>
+                        <input type="date" name="issue_date" class="form-control" value="{{ today_date }}" required>
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Due Date *</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ default_due_date }}" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('directIssueModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Issue Book</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openDirectIssueModal(btn) {
+        const bookId = btn.getAttribute('data-book-id');
+        const title = btn.getAttribute('data-book-title');
+        const isbn = btn.getAttribute('data-book-isbn');
+        const available = btn.getAttribute('data-available');
+        const total = btn.getAttribute('data-total');
+
+        document.getElementById('direct_issue_book_ref').value = bookId;
+        document.getElementById('direct_issue_display_title').textContent = title;
+        document.getElementById('direct_issue_display_isbn').textContent = isbn;
+        document.getElementById('direct_issue_display_available').textContent = available + ' / ' + total + ' copies';
+
+        // Reset student autocomplete and selection
+        clearStudentSelection('direct');
+        closeStudentDropdown('direct');
+
+        openModal('directIssueModal');
+    }
+
+    function openEditBookModalFromBtn(btn) {
+        const id = btn.getAttribute('data-id');
+        document.getElementById('editBookForm').action = "/books/edit/" + id;
+        document.getElementById('edit_book_title').value = btn.getAttribute('data-title');
+        document.getElementById('edit_book_author').value = btn.getAttribute('data-author');
+        document.getElementById('edit_book_isbn').value = btn.getAttribute('data-isbn');
+        document.getElementById('edit_book_category').value = btn.getAttribute('data-category');
+        document.getElementById('edit_book_year').value = btn.getAttribute('data-year');
+        document.getElementById('edit_book_copies').value = btn.getAttribute('data-copies');
+        document.getElementById('edit_book_shelf').value = btn.getAttribute('data-shelf');
+        openModal('editBookModal');
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('open_add') === 'true') {
+        openModal('addBookModal');
+    }
+</script>
+{% endblock %}

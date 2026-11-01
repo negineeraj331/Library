@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Athena Library Management System{% endblock %}</title>
+    
+    <!-- Google Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Modern Color Scheme & Anti-FOUC Theme Script -->
+    <meta name="color-scheme" content="light dark">
+    <script>
+        (function() {
+            var saved = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            var meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.setAttribute('content', theme);
+        })();
+    </script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+                <div class="brand-text">
+                    <h2>Athena Library</h2>
+                    <span>Management System</span>
+                </div>
+            </div>
+
+            <!-- System Live Status Pill -->
+            <div class="connection-status {% if db_connected %}status-online{% else %}status-offline{% endif %}">
+                <span class="status-dot"></span>
+                <span>{% if db_connected %}System Online{% else %}System Offline{% endif %}</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('books_list') }}" class="nav-item {% if request.endpoint == 'books_list' %}active{% endif %}">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Books Management</span>
+                </a>
+                <a href="{{ url_for('students_list') }}" class="nav-item {% if request.endpoint == 'students_list' %}active{% endif %}">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span>Students Management</span>
+                </a>
+                <a href="{{ url_for('issues_list') }}" class="nav-item {% if request.endpoint == 'issues_list' %}active{% endif %}">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    <span>Issue & Return Books</span>
+                </a>
+                <a href="{{ url_for('reports') }}" class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Reports & Summaries</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Info Footer & Librarian Profile -->
+            <div class="sidebar-footer">
+                <div style="padding: 10px 12px; background: rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                        <i class="fa-solid fa-user-shield" style="color: #38bdf8; font-size: 16px;"></i>
+                        <div style="font-size: 11.5px; line-height: 1.3; text-align: left; overflow: hidden;">
+                            <div style="color: #f8fafc; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ current_user_name }}</div>
+                            <div style="color: #94a3b8; font-size: 10.5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">{{ current_user_email }}</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" title="Sign Out" style="color: #f87171; font-size: 15px; padding: 4px 6px; border-radius: 4px; transition: 0.2s; display: inline-flex; align-items: center;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
+                </div>
+                <button type="button" class="sidebar-theme-btn" aria-label="Toggle Theme">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-moon"></i>
+                        <span class="theme-mode-label">Dark Mode</span>
+                    </span>
+                    <span style="font-size: 10px; opacity: 0.7; border: 1px solid rgba(255,255,255,0.2); padding: 1px 5px; border-radius: 4px;">Theme</span>
+                </button>
+                <p><strong>Athena Library</strong></p>
+                <p>&copy; 2026 All Rights Reserved</p>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            <!-- Header Banner -->
+            <header class="content-header">
+                <div>
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                    <p class="page-subtitle">{% block page_subtitle %}Overview of library records and circulation activity{% endblock %}</p>
+                </div>
+                <div class="header-actions">
+                    {% block header_actions %}{% endblock %}
+                </div>
+            </header>
+
+            <!-- Flash Notifications -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-container">
+                        {% for category, message in messages %}
+                            <div class="flash-alert alert-{{ category }}">
+                                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                                <span>{{ message }}</span>
+                                <button type="button" class="flash-close" onclick="this.parentElement.remove();">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Dynamic Page Content -->
+            <div class="content-body">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript interactions -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

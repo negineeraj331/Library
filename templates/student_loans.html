@@ -1,0 +1,125 @@
+{% extends "student_base.html" %}
+
+{% block title %}My Borrowed Books | Athena Library{% endblock %}
+{% block page_title %}My Borrowed Books & Circulation History{% endblock %}
+{% block page_subtitle %}Review your currently borrowed books, due dates, and past returned titles.{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('student_books') }}" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> Apply for a New Book
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- ACTIVE LOANS SECTION -->
+<div class="content-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-book-bookmark text-teal"></i> Currently Borrowed Books ({{ active_loans|length }})</h3>
+        <span class="badge badge-teal">Active Loans</span>
+    </div>
+
+    <div class="card-body">
+        {% if active_loans %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Book Title & ISBN</th>
+                        <th>Issued Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in active_loans %}
+                    <tr class="{% if loan.is_overdue %}row-overdue{% endif %}">
+                        <td>
+                            <strong>{{ loan.book_title }}</strong>
+                            {% if loan.book_isbn %}
+                            <br><code class="isbn-tag">
+                                <i class="fa-solid fa-barcode"></i> {{ loan.book_isbn }}
+                            </code>
+                            {% endif %}
+                        </td>
+                        <td>{{ loan.issue_date | pretty_date }}</td>
+                        <td>
+                            <strong class="{% if loan.is_overdue %}text-danger{% else %}text-navy{% endif %}">
+                                {{ loan.due_date | pretty_date }}
+                            </strong>
+                            {% if loan.is_overdue %}
+                            <br><small class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ loan.days_overdue }} day(s) overdue</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if loan.is_overdue %}
+                                <span class="badge badge-overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue</span>
+                            {% else %}
+                                <span class="badge badge-issued"><i class="fa-solid fa-clock"></i> Active Loan</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 30px 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-circle-check" style="font-size: 40px; margin-bottom: 10px; color: var(--success-green);"></i>
+            <h4>No Active Loans</h4>
+            <p>You do not currently have any borrowed books.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- PAST RETURNED BOOKS HISTORY -->
+<div class="content-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Past Returned Books ({{ past_loans|length }})</h3>
+        <span class="badge badge-returned">Returned History</span>
+    </div>
+
+    <div class="card-body">
+        {% if past_loans %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Book Title & ISBN</th>
+                        <th>Issued Date</th>
+                        <th>Returned On</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in past_loans %}
+                    <tr>
+                        <td>
+                            <strong>{{ loan.book_title }}</strong>
+                            {% if loan.book_isbn %}
+                            <br><code class="isbn-tag">
+                                <i class="fa-solid fa-barcode"></i> {{ loan.book_isbn }}
+                            </code>
+                            {% endif %}
+                        </td>
+                        <td>{{ loan.issue_date | pretty_date }}</td>
+                        <td>
+                            <span class="text-success font-bold"><i class="fa-solid fa-calendar-check"></i> {{ loan.return_date | pretty_date }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-returned"><i class="fa-solid fa-check"></i> Returned</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 24px 20px; color: var(--text-muted);">
+            <p>No past returned book history.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

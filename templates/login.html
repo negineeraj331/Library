@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librarian Login | Athena Library Management System</title>
+    
+    <!-- Google Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Modern Color Scheme & Anti-FOUC Theme Script -->
+    <meta name="color-scheme" content="light dark">
+    <script>
+        (function() {
+            var saved = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            var meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.setAttribute('content', theme);
+        })();
+    </script>
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            padding: 20px;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .login-card {
+            background: var(--card-bg, #ffffff);
+            border-radius: 16px;
+            box-shadow: var(--shadow-modal);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 32px 28px 26px 28px;
+            text-align: center;
+            color: #ffffff;
+            border-bottom: 2px solid #0ea5e9;
+        }
+
+        .login-brand-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #0ea5e9, #0d9488);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #ffffff;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 16px -4px rgba(14, 165, 233, 0.4);
+        }
+
+        .login-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .login-header p {
+            margin: 0;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .login-body {
+            padding: 28px 28px 24px 28px;
+            background: var(--card-bg, #ffffff);
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(14, 165, 233, 0.15);
+            color: #0284c7;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 18px;
+        }
+
+        .login-form label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main, #1e293b);
+            margin-bottom: 6px;
+        }
+
+        .input-icon-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-group i.field-icon {
+            position: absolute;
+            left: 14px;
+            color: #94a3b8;
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        .input-icon-group .form-control {
+            padding-left: 42px;
+            height: 44px;
+            font-size: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--input-border, #cbd5e1);
+            background: var(--input-bg, #ffffff);
+            color: var(--text-main, #1e293b);
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .input-icon-group .form-control:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+            outline: none;
+        }
+
+        .pwd-toggle-btn {
+            position: absolute;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .pwd-toggle-btn:hover {
+            color: #0ea5e9;
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 46px;
+            background: linear-gradient(135deg, #0284c7, #0d9488);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px -2px rgba(2, 132, 199, 0.35);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px -2px rgba(2, 132, 199, 0.45);
+        }
+
+        .login-card-footer {
+            background: var(--modal-footer-bg, #f8fafc);
+            border-top: 1px solid var(--border-color, #e2e8f0);
+            padding: 14px 28px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted, #64748b);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-theme-toggle">
+        <button type="button" class="theme-toggle-btn" aria-label="Toggle Light / Dark Mode" title="Toggle Light / Dark Mode">
+            <i class="fa-solid fa-moon"></i>
+            <span class="theme-text">Dark</span>
+        </button>
+    </div>
+    <div class="login-container">
+        <!-- Flash Alert Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div style="margin-bottom: 16px;">
+            {% for category, message in messages %}
+            <div class="flash-alert flash-{{ category }}" style="margin-bottom: 8px;">
+                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-brand-icon">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <h2>Athena Library</h2>
+                <p>Management System &bull; College MongoDB Project</p>
+            </div>
+
+            <div class="login-body">
+                <div style="text-align: center; margin-bottom: 22px;">
+                    <span class="role-badge">
+                        <i class="fa-solid fa-shield-halved"></i> Librarian Portal Only
+                    </span>
+                </div>
+
+                <form action="{{ url_for('login') }}" method="POST" class="login-form">
+                    <div class="form-group">
+                        <label for="login_email">Librarian Email *</label>
+                        <div class="input-icon-group">
+                            <i class="fa-solid fa-envelope field-icon"></i>
+                            <input type="email" id="login_email" name="email" class="form-control" placeholder="Enter librarian email" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login_password">Password *</label>
+                        <div class="input-icon-group">
+                            <i class="fa-solid fa-lock field-icon"></i>
+                            <input type="password" id="login_password" name="password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+                            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility()" title="Show/Hide password">
+                                <i id="pwd_toggle_icon" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In to Library System
+                    </button>
+                </form>
+            </div>
+
+            <div class="login-card-footer" style="padding: 16px 24px; text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-main); font-weight: 600;">
+                    Are you a Student?
+                </p>
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                    <a href="{{ url_for('student_login') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: rgba(2, 132, 199, 0.15); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.3); text-decoration: none; font-size: 12.5px; font-weight: 700;">
+                        <i class="fa-solid fa-graduation-cap"></i> Student Sign In
+                    </a>
+                    <a href="{{ url_for('student_register') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: rgba(13, 148, 136, 0.15); color: #2dd4bf; border: 1px solid rgba(13, 148, 136, 0.3); text-decoration: none; font-size: 12.5px; font-weight: 700;">
+                        <i class="fa-solid fa-user-plus"></i> Sign Up
+                    </a>
+                </div>
+                <div style="margin-top: 10px; font-size: 11.5px; color: #94a3b8;">
+                    <i class="fa-solid fa-lock"></i> Librarian Portal Only
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('login_password');
+            const icon = document.getElementById('pwd_toggle_icon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+

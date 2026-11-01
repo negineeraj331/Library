@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Sign Up | Athena Library Management System</title>
+    
+    <!-- Google Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Modern Color Scheme & Anti-FOUC Theme Script -->
+    <meta name="color-scheme" content="light dark">
+    <script>
+        (function() {
+            var saved = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            var meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.setAttribute('content', theme);
+        })();
+    </script>
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #091e3a 0%, #112d4e 50%, #091e3a 100%);
+            padding: 30px 20px;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .register-card {
+            background: var(--card-bg, #ffffff);
+            border-radius: 16px;
+            box-shadow: var(--shadow-modal);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #091e3a 0%, #112d4e 100%);
+            padding: 28px 28px 22px 28px;
+            text-align: center;
+            color: #ffffff;
+            border-bottom: 2px solid #0d9488;
+        }
+
+        .register-brand-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #0d9488, #0284c7);
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 16px -4px rgba(13, 148, 136, 0.4);
+        }
+
+        .register-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .register-header p {
+            margin: 0;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .register-body {
+            padding: 24px 28px;
+            background: var(--card-bg, #ffffff);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-main, #1e293b);
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            height: 42px;
+            font-size: 13.5px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border, #cbd5e1);
+            background: var(--input-bg, #ffffff);
+            color: var(--text-main, #1e293b);
+            width: 100%;
+            padding: 0 12px;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+            outline: none;
+        }
+
+        .id-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-gen-id {
+            background: var(--table-hover-bg, #f1f5f9);
+            border: 1px solid var(--border-color, #cbd5e1);
+            border-radius: 8px;
+            padding: 0 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main, #475569);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .btn-gen-id:hover {
+            background: var(--border-color, #e2e8f0);
+            color: var(--teal-primary, #0f172a);
+        }
+
+        .btn-register {
+            width: 100%;
+            height: 46px;
+            background: linear-gradient(135deg, #0d9488, #0284c7);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px -2px rgba(13, 148, 136, 0.35);
+            margin-top: 10px;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px -2px rgba(13, 148, 136, 0.45);
+        }
+
+        .register-footer {
+            background: var(--modal-footer-bg, #f8fafc);
+            border-top: 1px solid var(--border-color, #e2e8f0);
+            padding: 14px 24px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .register-footer a {
+            color: #0284c7;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .register-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-theme-toggle">
+        <button type="button" class="theme-toggle-btn" aria-label="Toggle Light / Dark Mode" title="Toggle Light / Dark Mode">
+            <i class="fa-solid fa-moon"></i>
+            <span class="theme-text">Dark</span>
+        </button>
+    </div>
+    <div class="register-container">
+        <!-- Flash Alert Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container" style="margin-bottom: 16px;">
+                    {% for category, message in messages %}
+                        <div class="flash-alert alert-{{ category }}">
+                            <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="register-card">
+            <div class="register-header">
+                <div class="register-brand-icon">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <h2>Student Sign Up</h2>
+                <p>Create your student library account to browse & apply for books</p>
+            </div>
+
+            <div class="register-body">
+                <form action="{{ url_for('student_register') }}" method="POST">
+                    <div class="form-group">
+                        <label for="reg_name">Full Name *</label>
+                        <input type="text" id="reg_name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" value="{{ form_data.get('name', '') }}" required minlength="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg_student_id">10-Digit Student ID *</label>
+                        <div class="id-input-group">
+                            <input type="text" id="reg_student_id" name="student_id" class="form-control" placeholder="10 numeric digits" value="{{ form_data.get('student_id', new_student_id) }}" required pattern="^[0-9]{10}$" maxlength="10">
+                            <button type="button" class="btn-gen-id" onclick="generateRandomId()" title="Generate new unique 10-digit ID">
+                                <i class="fa-solid fa-arrows-rotate"></i> Auto-ID
+                            </button>
+                        </div>
+                        <small style="color: var(--text-muted); font-size: 11px;">Must be exactly 10 digits (e.g. 1000000006)</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg_email">College Email *</label>
+                            <input type="email" id="reg_email" name="email" class="form-control" placeholder="student@college.edu" value="{{ form_data.get('email', '') }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg_contact">Contact Number *</label>
+                            <input type="text" id="reg_contact" name="contact" class="form-control" placeholder="10-digit mobile" value="{{ form_data.get('contact', '') }}" required pattern="^[0-9]{10}$" maxlength="10">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg_course">Course / Department *</label>
+                        <input type="text" id="reg_course" name="course" class="form-control" placeholder="e.g. B.Tech Computer Science" value="{{ form_data.get('course', '') }}" required minlength="2">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg_password">Create Password *</label>
+                            <input type="password" id="reg_password" name="password" class="form-control" placeholder="Min 4 characters" required minlength="4">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg_confirm_password">Confirm Password *</label>
+                            <input type="password" id="reg_confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="4">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-register">
+                        <i class="fa-solid fa-circle-check"></i> Complete Student Registration
+                    </button>
+                </form>
+            </div>
+
+            <div class="register-footer">
+                <p style="margin: 0; color: var(--text-main);">
+                    Already have a student account? <a href="{{ url_for('student_login') }}"><i class="fa-solid fa-right-to-bracket"></i> Sign In Here</a>
+                </p>
+                <div style="border-top: 1px dashed var(--border-color); margin: 10px 0; padding-top: 10px;">
+                    <a href="{{ url_for('login') }}" style="color: var(--text-muted); font-size: 12px;">
+                        <i class="fa-solid fa-user-shield"></i> Librarian Portal Login &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateRandomId() {
+            const random10 = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+            document.getElementById('reg_student_id').value = random10;
+        }
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+

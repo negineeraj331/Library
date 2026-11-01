@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Issue & Return Books | Athena Library{% endblock %}
+{% block page_title %}Book Circulation Management{% endblock %}
+{% block page_subtitle %}Track active book loans, process student checkouts, and manage book returns.{% endblock %}
+
+{% block header_actions %}
+<button type="button" class="btn btn-primary" onclick="openAddIssueModal()">
+    <i class="fa-solid fa-hand-holding-hand"></i> Issue Book
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- FILTER & SEARCH BAR -->
+<div class="content-card filter-card">
+    <form method="GET" action="{{ url_for('issues_list') }}" class="search-form">
+        <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" name="search" class="form-control" placeholder="Search by ISBN, Book Title, Student Name, or Student ID..." value="{{ search_query }}">
+        </div>
+
+        <div class="filter-select-wrapper">
+            <select name="status" class="form-control" onchange="this.form.submit()">
+                <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All Records</option>
+                <option value="Issued" {% if selected_status == 'Issued' %}selected{% endif %}>Issued</option>
+                <option value="Returned" {% if selected_status == 'Returned' %}selected{% endif %}>Returned</option>
+                <option value="Overdue" {% if selected_status == 'Overdue' %}selected{% endif %}>Overdue Only</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-navy">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+        {% if search_query or (selected_status and selected_status != 'All') %}
+        <a href="{{ url_for('issues_list') }}" class="btn btn-outline" title="Reset Filters">
+            <i class="fa-solid fa-xmark"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- PENDING STUDENT BOOK APPLICATIONS -->
+<div class="content-card" style="margin-top: 24px; margin-bottom: 24px; border-left: 4px solid var(--warning-amber);">
+    <div class="card-header" style="background: var(--warning-bg);">
+        <h3 style="color: var(--text-main);">
+            <i class="fa-solid fa-file-signature" style="color: var(--warning-amber);"></i> Student Book Applications ({{ pending_applications|length }} Pending)
+        </h3>
+        <span class="badge badge-amber">Self-Service Requests</span>
+    </div>
+    <div class="card-body">
+        {% if pending_applications %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student Name & ID</th>
+                        <th>Book Requested & ISBN</th>
+                        <th>Applied On</th>
+                        <th>Duration</th>
+                        <th>Student Note</th>
+                        <th style="text-align: center;">Librarian Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in pending_applications %}
+                    <tr>
+                        <td>
+                            <strong>{{ app.student_name }}</strong><br>
+                            <span class="badge badge-navy">{{ app.student_id }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ app.book_title }}</strong>
+                            {% if app.book_isbn %}
+                            <br><code class="isbn-tag">
+                                <i class="fa-solid fa-barcode"></i> {{ app.book_isbn }}
+                            </code>
+                            {% endif %}
+                        </td>
+                        <td>{{ app.apply_date | pretty_date }}</td>
+                        <td>{{ app.requested_days or 14 }} Days</td>
+                        <td style="max-width: 220px; font-size: 12.5px; color: var(--text-muted);">
+                            {{ app.notes or '—' }}
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; gap: 6px; justify-content: center;">
+                                <form action="{{ url_for('approve_application', app_id=app._id|string) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-teal" title="Approve and Issue Book to Student">
+                                        <i class="fa-solid fa-check"></i> Approve & Issue
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('reject_application', app_id=app._id|string) }}" method="POST" style="display: inline;" onsubmit="return confirm('Reject this student application?');">
+                                    <button type="submit" class="btn btn-sm btn-outline text-danger" title="Reject Application">
+                                        <i class="fa-solid fa-xmark"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); margin: 0; font-size: 13.5px;">
+            <i class="fa-solid fa-circle-check text-success"></i> No pending student applications awaiting review.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ISSUED BOOKS TABLE -->
+<div class="content-card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-list-check"></i> Circulation Transactions ({{ issues|length }})</h3>
+        <span class="badge badge-teal">Circulation Log</span>
+    </div>
+    <div class="card-body">
+        {% if issues %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student Name & ID</th>
+                        <th>Book Title & ISBN</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Return Date</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for iss in issues %}
+                    <tr class="{% if iss.is_overdue %}row-overdue{% endif %}">
+                        <td>
+                            <strong>{{ iss.student_name }}</strong><br>
+                            <span class="badge badge-navy">{{ iss.student_id }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ iss.book_title }}</strong>
+                            {% if iss.book_isbn %}
+                            <br><code class="isbn-tag"><i class="fa-solid fa-barcode"></i> {{ iss.book_isbn }}</code>
+                            {% endif %}
+                        </td>
+                        <td>{{ iss.issue_date | pretty_date }}</td>
+                        <td>
+                            <span class="{% if iss.is_overdue %}text-danger font-bold{% endif %}">
+                                {{ iss.due_date | pretty_date }}
+                            </span>
+                            {% if iss.is_overdue %}
+                            <br><small class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ iss.days_overdue }} day(s) overdue</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if iss.return_date %}
+                                <span class="text-success"><i class="fa-regular fa-calendar-check"></i> {{ iss.return_date | pretty_date }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if iss.status == 'Returned' %}
+                                <span class="badge badge-returned"><i class="fa-solid fa-check"></i> Returned</span>
+                            {% elif iss.is_overdue %}
+                                <span class="badge badge-overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue</span>
+                            {% else %}
+                                <span class="badge badge-issued"><i class="fa-solid fa-clock"></i> Issued</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <!-- Fast Return Button (only if active) -->
+                            {% if iss.status == 'Issued' %}
+                            <form action="{{ url_for('return_issue', issue_id=iss._id) }}" method="POST" style="display: inline-block;">
+                                <button type="submit" class="btn btn-sm btn-return" title="Return Book">
+                                    <i class="fa-solid fa-rotate-left"></i> Return
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Edit Issue Record Button -->
+                            <button type="button" class="btn-action btn-edit" title="Edit Loan Details"
+                                data-id="{{ iss._id }}"
+                                data-book-title="{{ iss.book_title }}"
+                                data-book-isbn="{{ iss.book_isbn }}"
+                                data-student-name="{{ iss.student_name }}"
+                                data-student-id="{{ iss.student_id }}"
+                                data-issue-date="{{ iss.issue_date | pretty_date }}"
+                                data-due-date="{{ iss.due_date | format_date }}"
+                                data-status="{{ iss.status }}"
+                                onclick="openEditIssueModalFromBtn(this)">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+
+                            <!-- Delete Issue Record Button -->
+                            <form action="{{ url_for('delete_issue', issue_id=iss._id) }}" method="POST" style="display: inline-block;"
+                                onsubmit="return confirm('Are you sure you want to delete this circulation record?');">
+                                <button type="submit" class="btn-action btn-delete" title="Delete Record">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <h4>No Circulation Records Found</h4>
+            <p>No loan records match your current filter. Click below to issue a book.</p>
+            <button type="button" class="btn btn-primary" onclick="openAddIssueModal()">
+                <i class="fa-solid fa-hand-holding-hand"></i> Issue Book
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Issue Modal -->
+<div id="addIssueModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-hand-holding-hand"></i> Issue Book</h3>
+            <button type="button" class="modal-close" onclick="closeModal('addIssueModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_issue') }}" method="POST" onsubmit="return validateStudentSelection('add')">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user-graduate"></i> Select Student *</label>
+                    
+                    <div class="student-search-container">
+                        <!-- Search & Input Box -->
+                        <div class="student-search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text"
+                                   id="add_student_search_input"
+                                   class="form-control"
+                                   placeholder="Type Student ID (e.g. 1651...) or Name to search..."
+                                   autocomplete="off"
+                                   onfocus="openStudentDropdown('add')"
+                                   oninput="filterStudentDropdown('add')"
+                                   onkeydown="handleStudentKeydown(event, 'add')">
+                            <button type="button"
+                                    id="add_student_clear_btn"
+                                    class="clear-btn"
+                                    onclick="clearStudentSelection('add')"
+                                    title="Clear selection">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Hidden Field holding MongoDB _id for Form Submission -->
+                        <input type="hidden" id="add_student_ref" name="student_ref" required>
+
+                        <!-- Floating Dropdown Suggestions List -->
+                        <div id="add_student_dropdown" class="student-dropdown-list">
+                            {% for s in students %}
+                            <div class="student-dropdown-item"
+                                 data-id="{{ s._id }}"
+                                 data-sid="{{ s.student_id }}"
+                                 data-name="{{ s.name }}"
+                                 data-course="{{ s.course }}"
+                                 data-phone="{{ s.contact }}"
+                                 data-email="{{ s.email }}"
+                                 onclick="selectStudentItem('add', this)">
+                                <div>
+                                    <div class="student-info-name">{{ s.name }}</div>
+                                    <div class="student-info-sub">
+                                        <span><i class="fa-solid fa-graduation-cap"></i> {{ s.course }}</span>
+                                        <span><i class="fa-solid fa-phone"></i> {{ s.contact }}</span>
+                                    </div>
+                                </div>
+                                <span class="student-id-pill">ID: {{ s.student_id }}</span>
+                            </div>
+                            {% endfor %}
+                            <div id="add_student_empty" class="student-dropdown-empty">
+                                <i class="fa-solid fa-circle-exclamation"></i> No student found matching "<span class="query-span"></span>"
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-hint">Type student ID or name to see all matches, then click any student to select.</small>
+
+                    <!-- Selected Student Confirmation Box -->
+                    <div id="add_student_card" style="display: none; margin-top: 10px; background: var(--success-bg); border: 1px solid var(--success-green); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: var(--text-main);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div>
+                                <span style="font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; color: var(--teal-primary); margin-right: 6px;">SELECTED STUDENT</span>
+                                <strong data-field="name" style="font-size: 13.5px; color: var(--text-main);">—</strong>
+                            </div>
+                            <span data-field="sid" style="background: rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 12px; font-family: monospace; font-weight: 700; color: var(--teal-primary);">—</span>
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 14px;">
+                            <span><i class="fa-solid fa-graduation-cap"></i> <span data-field="course">—</span></span>
+                            <span><i class="fa-solid fa-phone"></i> <span data-field="phone">—</span></span>
+                            <span><i class="fa-solid fa-envelope"></i> <span data-field="email">—</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Book to Issue *</label>
+                    <select name="book_ref" class="form-control" required>
+                        <option value="">-- Choose Available Book --</option>
+                        {% for b in books %}
+                        <option value="{{ b._id }}" {% if b.available_copies <= 0 %}disabled{% endif %}>
+                            {{ b.title }} (Available: {{ b.available_copies }}/{{ b.total_copies }} | Shelf: {{ b.shelf_location }})
+                            {% if b.available_copies <= 0 %} - [NO COPIES AVAILABLE]{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-hint">Only books with available copies (> 0) can be issued.</small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label>Issue Date *</label>
+                        <input type="date" name="issue_date" class="form-control" value="{{ today_date }}" required>
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Due Date *</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ default_due_date }}" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addIssueModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Issue Book</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Issue Modal (Only Due Date and Circulation Status are Editable) -->
+<div id="editIssueModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen-to-square"></i> Edit Loan Record</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editIssueModal')">&times;</button>
+        </div>
+        <form id="editIssueForm" method="POST" action="">
+            <div class="modal-body">
+                <!-- Read-Only Loan Information Summary -->
+                <div style="background: var(--table-header-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;">
+                    <div style="margin-bottom: 8px;">
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--teal-primary);">Book</span>
+                        <h4 id="edit_display_book_title" style="margin: 2px 0 4px 0; font-size: 15px; color: var(--text-main);">—</h4>
+                        <span style="font-size: 12px; color: var(--text-muted);"><i class="fa-solid fa-barcode"></i> ISBN: <code id="edit_display_book_isbn" style="color: var(--teal-primary); font-weight: 600;">—</code></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-muted); padding-top: 8px; border-top: 1px dashed var(--border-color);">
+                        <span><i class="fa-solid fa-user-graduate"></i> Student: <strong id="edit_display_student" style="color: var(--text-main);">—</strong></span>
+                        <span><i class="fa-solid fa-calendar-days"></i> Issued on: <strong id="edit_display_issue_date" style="color: var(--text-main);">—</strong></span>
+                    </div>
+                </div>
+
+                <!-- Editable Field 1: Due Date -->
+                <div class="form-group">
+                    <label>Due Date *</label>
+                    <input type="date" id="edit_due_date" name="due_date" class="form-control" required>
+                    <small class="form-hint">Extend or adjust the loan return deadline.</small>
+                </div>
+
+                <!-- Editable Field 2: Circulation Status -->
+                <div class="form-group">
+                    <label>Circulation Status *</label>
+                    <select id="edit_issue_status" name="status" class="form-control" required>
+                        <option value="Issued">Issued</option>
+                        <option value="Returned">Returned</option>
+                    </select>
+                    <small class="form-hint">Setting status to 'Returned' will automatically restore 1 copy to the book's available stock.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editIssueModal')">Cancel</button>
+                <button type="submit" class="btn btn-teal"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openAddIssueModal() {
+        clearStudentSelection('add');
+        closeStudentDropdown('add');
+        openModal('addIssueModal');
+    }
+
+    function openEditIssueModalFromBtn(btn) {
+        const issueId = btn.getAttribute('data-id');
+        document.getElementById('editIssueForm').action = "/issues/edit/" + issueId;
+        document.getElementById('edit_display_book_title').textContent = btn.getAttribute('data-book-title') || '—';
+        document.getElementById('edit_display_book_isbn').textContent = btn.getAttribute('data-book-isbn') || '—';
+        document.getElementById('edit_display_student').textContent = (btn.getAttribute('data-student-name') || '') + ' (' + (btn.getAttribute('data-student-id') || '') + ')';
+        document.getElementById('edit_display_issue_date').textContent = btn.getAttribute('data-issue-date') || '—';
+        document.getElementById('edit_due_date').value = btn.getAttribute('data-due-date');
+        document.getElementById('edit_issue_status').value = btn.getAttribute('data-status');
+        openModal('editIssueModal');
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('open_add') === 'true') {
+        clearStudentSelection('add');
+        closeStudentDropdown('add');
+        openModal('addIssueModal');
+    }
+</script>
+{% endblock %}
