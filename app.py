@@ -23,7 +23,7 @@ def require_login():
         "/student/register",
         "/api/check_student_id"
     ]
-    if any(request.path.startswith(p) for p in public_paths):
+    if request.path == "/" or any(request.path.startswith(p) for p in public_paths):
         return None
 
     # Student portal routes
@@ -66,12 +66,11 @@ def inject_status():
     }
 
 
-# Librarian Authentication (Login & Logout)
+# Librarian & Student Authentication (Login & Registration Portal)
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Librarian login page."""
-    if session.get("logged_in"):
-        return redirect(url_for("dashboard"))
+    """Unified Login and Registration Portal for Librarians and Students."""
+    _, students_col, _ = get_collections()
 
     if request.method == "POST":
         email = request.form.get("email", "").strip()
@@ -89,8 +88,19 @@ def login():
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid email or password. Access is restricted to authorized librarians.", "error")
+            return render_template(
+                "login.html",
+                active_tab="librarian",
+                new_student_id=generate_student_id(students_col)
+            )
 
-    return render_template("login.html")
+    active_tab = request.args.get("tab", "student")
+    new_student_id = generate_student_id(students_col)
+    return render_template(
+        "login.html",
+        active_tab=active_tab,
+        new_student_id=new_student_id
+    )
 
 
 @app.route("/logout")
@@ -101,10 +111,11 @@ def logout():
     return redirect(url_for("login"))
 
 
-# Dashboard Route
+# Entry & Authentication Landing Route
 @app.route("/")
 def home():
-    return redirect(url_for("dashboard"))
+    """Initial landing route: redirects first-time visitors to the Login/Register page."""
+    return redirect(url_for("login"))
 
 
 @app.route("/dashboard")
@@ -1013,9 +1024,6 @@ def student_register():
 @app.route("/student/login", methods=["GET", "POST"])
 def student_login():
     """Dedicated login portal for students."""
-    if session.get("student_logged_in"):
-        return redirect(url_for("student_books"))
-
     if request.method == "POST":
         identifier = request.form.get("identifier", "").strip()
         password = request.form.get("password", "").strip()

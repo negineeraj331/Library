@@ -18,6 +18,7 @@ class StudentPortalTests(unittest.TestCase):
         cls.issued_col.delete_many({"student_id": "9999999999"})
         cls.apps_col.delete_many({"student_id": "9999999999"})
         cls.students_col.delete_many({"student_id": "9999999999"})
+        cls.books_col.update_one({"title": "Clean Code"}, {"$set": {"available_copies": 4}})
 
     def test_01_student_registration(self):
         """Student can sign up with valid credentials."""

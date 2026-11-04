@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Librarian Login | Athena Library Management System</title>
+    <title>Athena Library | Sign In & Student Registration</title>
     
     <!-- Google Font: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,37 +35,40 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            padding: 20px;
+            background: linear-gradient(135deg, #091e3a 0%, #112d4e 50%, #091e3a 100%);
+            padding: 30px 16px;
             margin: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-main);
+            box-sizing: border-box;
         }
 
-        .login-container {
+        .auth-container {
             width: 100%;
-            max-width: 440px;
+            max-width: 520px;
+            margin: 0 auto;
         }
 
-        .login-card {
+        .auth-card {
             background: var(--card-bg, #ffffff);
-            border-radius: 16px;
-            box-shadow: var(--shadow-modal);
-            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-color, #e2e8f0);
             overflow: hidden;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
-        .login-header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 32px 28px 26px 28px;
+        .auth-header {
+            background: linear-gradient(135deg, #091e3a 0%, #112d4e 100%);
+            padding: 28px 24px 22px 24px;
             text-align: center;
             color: #ffffff;
             border-bottom: 2px solid #0ea5e9;
         }
 
-        .login-brand-icon {
-            width: 56px;
-            height: 56px;
+        .auth-brand-icon {
+            width: 54px;
+            height: 54px;
             background: linear-gradient(135deg, #0ea5e9, #0d9488);
             border-radius: 14px;
             display: inline-flex;
@@ -73,50 +76,218 @@
             justify-content: center;
             font-size: 26px;
             color: #ffffff;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             box-shadow: 0 8px 16px -4px rgba(14, 165, 233, 0.4);
         }
 
-        .login-header h2 {
+        .auth-header h2 {
             margin: 0 0 4px 0;
             font-size: 22px;
             font-weight: 800;
             letter-spacing: -0.3px;
+            color: #f8fafc;
         }
 
-        .login-header p {
+        .auth-header p {
             margin: 0;
             font-size: 13px;
             color: #94a3b8;
         }
 
-        .login-body {
-            padding: 28px 28px 24px 28px;
+        /* Active Session Notice */
+        .session-notice-box {
+            background: rgba(14, 165, 233, 0.12);
+            border-bottom: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .session-notice-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        .session-notice-info i {
+            color: #0ea5e9;
+            font-size: 16px;
+        }
+
+        .session-notice-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-resume {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            background: #0284c7;
+            color: #ffffff !important;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-resume:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        .btn-signout-link {
+            font-size: 12px;
+            color: #ef4444;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 4px 8px;
+        }
+
+        .btn-signout-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Navigation Tabs */
+        .auth-nav-tabs {
+            display: flex;
+            background: var(--bg-card-header, rgba(15, 23, 42, 0.04));
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+            padding: 8px 12px 0 12px;
+            gap: 6px;
+            overflow-x: auto;
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted, #64748b);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .auth-tab-btn:hover {
+            color: var(--text-main, #0f172a);
+            background: rgba(14, 165, 233, 0.06);
+        }
+
+        .auth-tab-btn.active {
+            color: #0284c7;
             background: var(--card-bg, #ffffff);
+            border-bottom: 3px solid #0284c7;
+        }
+
+        [data-theme="dark"] .auth-tab-btn.active {
+            color: #38bdf8;
+            border-bottom-color: #38bdf8;
+            background: var(--card-bg, #131f33);
+        }
+
+        /* Tab Content Panes */
+        .auth-body {
+            padding: 24px 28px 26px 28px;
+        }
+
+        .auth-tab-pane {
+            display: none;
+            animation: fadeInTab 0.25s ease-out;
+        }
+
+        .auth-tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .role-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(14, 165, 233, 0.15);
-            color: #0284c7;
             font-size: 11.5px;
             font-weight: 700;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             margin-bottom: 18px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .login-form .form-group {
-            margin-bottom: 18px;
+        .role-student {
+            background: rgba(13, 148, 136, 0.15);
+            color: #0d9488;
         }
 
-        .login-form label {
+        [data-theme="dark"] .role-student {
+            background: rgba(13, 148, 136, 0.25);
+            color: #2dd4bf;
+        }
+
+        .role-register {
+            background: rgba(16, 185, 129, 0.15);
+            color: #059669;
+        }
+
+        [data-theme="dark"] .role-register {
+            background: rgba(16, 185, 129, 0.25);
+            color: #34d399;
+        }
+
+        .role-librarian {
+            background: rgba(14, 165, 233, 0.15);
+            color: #0284c7;
+        }
+
+        [data-theme="dark"] .role-librarian {
+            background: rgba(14, 165, 233, 0.25);
+            color: #38bdf8;
+        }
+
+        /* Form Controls */
+        .auth-form .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .auth-form label {
             display: block;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             color: var(--text-main, #1e293b);
             margin-bottom: 6px;
@@ -131,26 +302,28 @@
         .input-icon-group i.field-icon {
             position: absolute;
             left: 14px;
-            color: #94a3b8;
-            font-size: 15px;
+            color: var(--text-muted, #94a3b8);
+            font-size: 14px;
             pointer-events: none;
         }
 
         .input-icon-group .form-control {
-            padding-left: 42px;
+            padding-left: 40px;
             height: 44px;
-            font-size: 14px;
+            font-size: 13.5px;
             border-radius: 10px;
             border: 1px solid var(--input-border, #cbd5e1);
             background: var(--input-bg, #ffffff);
             color: var(--text-main, #1e293b);
             width: 100%;
+            box-sizing: border-box;
             transition: all 0.2s ease;
+            font-family: inherit;
         }
 
         .input-icon-group .form-control:focus {
             border-color: #0ea5e9;
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
             outline: none;
         }
 
@@ -159,7 +332,7 @@
             right: 12px;
             background: transparent;
             border: none;
-            color: #94a3b8;
+            color: var(--text-muted, #94a3b8);
             cursor: pointer;
             padding: 6px;
             font-size: 14px;
@@ -171,33 +344,120 @@
             color: #0ea5e9;
         }
 
-        .btn-login {
+        .btn-gen-id {
+            position: absolute;
+            right: 8px;
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="dark"] .btn-gen-id {
+            color: #38bdf8;
+            background: rgba(14, 165, 233, 0.2);
+        }
+
+        .btn-gen-id:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
+        .btn-submit-primary {
             width: 100%;
             height: 46px;
-            background: linear-gradient(135deg, #0284c7, #0d9488);
-            color: #ffffff;
             border: none;
             border-radius: 10px;
-            font-size: 15px;
+            font-size: 14.5px;
             font-weight: 700;
+            font-family: inherit;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px -2px rgba(2, 132, 199, 0.35);
+            margin-top: 20px;
         }
 
-        .btn-login:hover {
+        .btn-student {
+            background: linear-gradient(135deg, #0d9488, #0284c7);
+            color: #ffffff;
+            box-shadow: 0 4px 12px -2px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #059669, #0d9488);
+            color: #ffffff;
+            box-shadow: 0 4px 12px -2px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-librarian {
+            background: linear-gradient(135deg, #0284c7, #1e293b);
+            color: #ffffff;
+            box-shadow: 0 4px 12px -2px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn-submit-primary:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px -2px rgba(2, 132, 199, 0.45);
+            filter: brightness(1.06);
         }
 
-        .login-card-footer {
+        .auth-footer-help {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border-color, #e2e8f0);
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-muted, #64748b);
+        }
+
+        .auth-footer-help a {
+            color: #0284c7;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] .auth-footer-help a {
+            color: #38bdf8;
+        }
+
+        .auth-footer-help a:hover {
+            text-decoration: underline;
+        }
+
+        .demo-credentials {
+            margin-top: 14px;
+            background: var(--bg-card-header, rgba(15, 23, 42, 0.04));
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            color: var(--text-muted, #64748b);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .demo-credentials code {
+            color: var(--text-main, #0f172a);
+            font-weight: 700;
+            font-family: monospace;
+            background: rgba(14, 165, 233, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .auth-card-footer {
             background: var(--modal-footer-bg, #f8fafc);
             border-top: 1px solid var(--border-color, #e2e8f0);
-            padding: 14px 28px;
+            padding: 14px 24px;
             text-align: center;
             font-size: 12px;
             color: var(--text-muted, #64748b);
@@ -211,7 +471,8 @@
             <span class="theme-text">Dark</span>
         </button>
     </div>
-    <div class="login-container">
+
+    <div class="auth-container">
         <!-- Flash Alert Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -226,71 +487,277 @@
         {% endif %}
         {% endwith %}
 
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-brand-icon">
+        <div class="auth-card">
+            <!-- Header Banner -->
+            <div class="auth-header">
+                <div class="auth-brand-icon">
                     <i class="fa-solid fa-book-bookmark"></i>
                 </div>
                 <h2>Athena Library</h2>
                 <p>Management System &bull; College MongoDB Project</p>
             </div>
 
-            <div class="login-body">
-                <div style="text-align: center; margin-bottom: 22px;">
-                    <span class="role-badge">
-                        <i class="fa-solid fa-shield-halved"></i> Librarian Portal Only
-                    </span>
+            <!-- Active Session Banner (if signed in) -->
+            {% if session.get('logged_in') %}
+            <div class="session-notice-box">
+                <div class="session-notice-info">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Signed in as <strong>{{ session.get('user_name', 'Librarian') }}</strong> (Librarian)</span>
                 </div>
+                <div class="session-notice-actions">
+                    <a href="{{ url_for('dashboard') }}" class="btn-resume">
+                        <i class="fa-solid fa-gauge-high"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn-signout-link" title="Sign Out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+            {% elif session.get('student_logged_in') %}
+            <div class="session-notice-box" style="background: rgba(13, 148, 136, 0.12); border-bottom-color: rgba(13, 148, 136, 0.3);">
+                <div class="session-notice-info">
+                    <i class="fa-solid fa-graduation-cap" style="color: #0d9488;"></i>
+                    <span>Signed in as <strong>{{ session.get('student_name', 'Student') }}</strong> (#{{ session.get('student_id', '') }})</span>
+                </div>
+                <div class="session-notice-actions">
+                    <a href="{{ url_for('student_books') }}" class="btn-resume" style="background: #0d9488;">
+                        <i class="fa-solid fa-book-open"></i> Student Portal
+                    </a>
+                    <a href="{{ url_for('student_logout') }}" class="btn-signout-link" title="Sign Out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+            {% endif %}
 
-                <form action="{{ url_for('login') }}" method="POST" class="login-form">
-                    <div class="form-group">
-                        <label for="login_email">Librarian Email *</label>
-                        <div class="input-icon-group">
-                            <i class="fa-solid fa-envelope field-icon"></i>
-                            <input type="email" id="login_email" name="email" class="form-control" placeholder="Enter librarian email" required autocomplete="username">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="login_password">Password *</label>
-                        <div class="input-icon-group">
-                            <i class="fa-solid fa-lock field-icon"></i>
-                            <input type="password" id="login_password" name="password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
-                            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility()" title="Show/Hide password">
-                                <i id="pwd_toggle_icon" class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-login">
-                        <i class="fa-solid fa-right-to-bracket"></i> Sign In to Library System
-                    </button>
-                </form>
+            <!-- Tab Navigation Header -->
+            <div class="auth-nav-tabs" role="tablist">
+                <button type="button" class="auth-tab-btn {% if active_tab == 'student' %}active{% endif %}" id="tabBtn-student" onclick="switchAuthTab('student')" role="tab" aria-selected="{% if active_tab == 'student' %}true{% else %}false{% endif %}">
+                    <i class="fa-solid fa-graduation-cap"></i> Student Sign In
+                </button>
+                <button type="button" class="auth-tab-btn {% if active_tab == 'register' %}active{% endif %}" id="tabBtn-register" onclick="switchAuthTab('register')" role="tab" aria-selected="{% if active_tab == 'register' %}true{% else %}false{% endif %}">
+                    <i class="fa-solid fa-user-plus"></i> Student Register
+                </button>
+                <button type="button" class="auth-tab-btn {% if active_tab == 'librarian' %}active{% endif %}" id="tabBtn-librarian" onclick="switchAuthTab('librarian')" role="tab" aria-selected="{% if active_tab == 'librarian' %}true{% else %}false{% endif %}">
+                    <i class="fa-solid fa-user-shield"></i> Librarian Sign In
+                </button>
             </div>
 
-            <div class="login-card-footer" style="padding: 16px 24px; text-align: center;">
-                <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-main); font-weight: 600;">
-                    Are you a Student?
-                </p>
-                <div style="display: flex; gap: 8px; justify-content: center;">
-                    <a href="{{ url_for('student_login') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: rgba(2, 132, 199, 0.15); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.3); text-decoration: none; font-size: 12.5px; font-weight: 700;">
-                        <i class="fa-solid fa-graduation-cap"></i> Student Sign In
-                    </a>
-                    <a href="{{ url_for('student_register') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: rgba(13, 148, 136, 0.15); color: #2dd4bf; border: 1px solid rgba(13, 148, 136, 0.3); text-decoration: none; font-size: 12.5px; font-weight: 700;">
-                        <i class="fa-solid fa-user-plus"></i> Sign Up
-                    </a>
+            <div class="auth-body">
+                <!-- ==================== TAB 1: STUDENT SIGN IN ==================== -->
+                <div class="auth-tab-pane {% if active_tab == 'student' %}active{% endif %}" id="pane-student">
+                    <div style="text-align: center; margin-bottom: 18px;">
+                        <span class="role-badge role-student">
+                            <i class="fa-solid fa-graduation-cap"></i> Student Self-Service Portal
+                        </span>
+                    </div>
+
+                    <form action="{{ url_for('student_login') }}" method="POST" class="auth-form">
+                        <div class="form-group">
+                            <label for="student_identifier">Student ID or College Email *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-id-card field-icon"></i>
+                                <input type="text" id="student_identifier" name="identifier" class="form-control" placeholder="e.g. 1000000001 or rahul.sharma@college.edu" required autocomplete="username">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="student_password">Password *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-lock field-icon"></i>
+                                <input type="password" id="student_password" name="password" class="form-control" placeholder="Enter student password" required autocomplete="current-password">
+                                <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('student_password', 'pwd_icon_stu')" title="Show/Hide password">
+                                    <i id="pwd_icon_stu" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit-primary btn-student">
+                            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Student Portal
+                        </button>
+                    </form>
+
+                    <div class="demo-credentials">
+                        <span><i class="fa-solid fa-key" style="color: #0d9488; margin-right: 4px;"></i> Demo: <code>rahul.sharma@college.edu</code></span>
+                        <span>Pass: <code>12345</code></span>
+                    </div>
+
+                    <div class="auth-footer-help">
+                        Don't have a student account yet? 
+                        <a onclick="switchAuthTab('register')">Register here &rarr;</a>
+                    </div>
                 </div>
-                <div style="margin-top: 10px; font-size: 11.5px; color: #94a3b8;">
-                    <i class="fa-solid fa-lock"></i> Librarian Portal Only
+
+                <!-- ==================== TAB 2: STUDENT REGISTRATION ==================== -->
+                <div class="auth-tab-pane {% if active_tab == 'register' %}active{% endif %}" id="pane-register">
+                    <div style="text-align: center; margin-bottom: 18px;">
+                        <span class="role-badge role-register">
+                            <i class="fa-solid fa-user-plus"></i> New Student Registration
+                        </span>
+                    </div>
+
+                    <form action="{{ url_for('student_register') }}" method="POST" class="auth-form" id="studentRegisterForm">
+                        <div class="form-group">
+                            <label for="reg_name">Full Name *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-user field-icon"></i>
+                                <input type="text" id="reg_name" name="name" class="form-control" placeholder="e.g. Priya Sharma" required autocomplete="name">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg_student_id">10-Digit Student ID *</label>
+                                <div class="input-icon-group">
+                                    <i class="fa-solid fa-hashtag field-icon"></i>
+                                    <input type="text" id="reg_student_id" name="student_id" class="form-control" placeholder="10 digits" value="{{ new_student_id or '' }}" maxlength="10" pattern="\d{10}" required>
+                                    <button type="button" class="btn-gen-id" onclick="generateNewId()" title="Generate unique 10-digit ID">New ID</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_contact">Mobile Number *</label>
+                                <div class="input-icon-group">
+                                    <i class="fa-solid fa-phone field-icon"></i>
+                                    <input type="tel" id="reg_contact" name="contact" class="form-control" placeholder="10 digits" maxlength="10" pattern="\d{10}" required autocomplete="tel">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg_email">College Email *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-envelope field-icon"></i>
+                                <input type="email" id="reg_email" name="email" class="form-control" placeholder="e.g. priya.sharma@college.edu" required autocomplete="email">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg_course">Course / Department *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-graduation-cap field-icon"></i>
+                                <select id="reg_course" name="course" class="form-control" required style="padding-left: 40px;">
+                                    <option value="" disabled selected>-- Select your course --</option>
+                                    <option value="B.Tech Computer Science">B.Tech Computer Science</option>
+                                    <option value="B.Tech Information Technology">B.Tech Information Technology</option>
+                                    <option value="B.Tech Electronics & Comm.">B.Tech Electronics & Comm.</option>
+                                    <option value="B.Tech Mechanical">B.Tech Mechanical</option>
+                                    <option value="MCA - Master of Computer Applications">MCA - Master of Computer Applications</option>
+                                    <option value="BBA / MBA">BBA / MBA</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg_password">Create Password *</label>
+                                <div class="input-icon-group">
+                                    <i class="fa-solid fa-lock field-icon"></i>
+                                    <input type="password" id="reg_password" name="password" class="form-control" placeholder="Min 4 chars" minlength="4" required autocomplete="new-password">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_confirm_password">Confirm Password *</label>
+                                <div class="input-icon-group">
+                                    <i class="fa-solid fa-circle-check field-icon"></i>
+                                    <input type="password" id="reg_confirm_password" name="confirm_password" class="form-control" placeholder="Repeat pwd" minlength="4" required autocomplete="new-password">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit-primary btn-register">
+                            <i class="fa-solid fa-user-plus"></i> Complete Student Registration
+                        </button>
+                    </form>
+
+                    <div class="auth-footer-help">
+                        Already have a student account? 
+                        <a onclick="switchAuthTab('student')">Sign in here &rarr;</a>
+                    </div>
                 </div>
+
+                <!-- ==================== TAB 3: LIBRARIAN SIGN IN ==================== -->
+                <div class="auth-tab-pane {% if active_tab == 'librarian' %}active{% endif %}" id="pane-librarian">
+                    <div style="text-align: center; margin-bottom: 18px;">
+                        <span class="role-badge role-librarian">
+                            <i class="fa-solid fa-shield-halved"></i> Authorized Staff Only
+                        </span>
+                    </div>
+
+                    <form action="{{ url_for('login') }}" method="POST" class="auth-form">
+                        <div class="form-group">
+                            <label for="login_email">Librarian Email *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-envelope field-icon"></i>
+                                <input type="email" id="login_email" name="email" class="form-control" placeholder="Enter librarian email" required autocomplete="username">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="login_password">Password *</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-lock field-icon"></i>
+                                <input type="password" id="login_password" name="password" class="form-control" placeholder="Enter librarian password" required autocomplete="current-password">
+                                <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('login_password', 'pwd_icon_lib')" title="Show/Hide password">
+                                    <i id="pwd_icon_lib" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit-primary btn-librarian">
+                            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Librarian Portal
+                        </button>
+                    </form>
+
+                    <div class="demo-credentials">
+                        <span><i class="fa-solid fa-shield" style="color: #0284c7; margin-right: 4px;"></i> Demo: <code>neerajnegi90451@gmail.com</code></span>
+                        <span>Pass: <code>12345</code></span>
+                    </div>
+
+                    <div class="auth-footer-help">
+                        Are you a student? 
+                        <a onclick="switchAuthTab('student')">Switch to Student Portal &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="auth-card-footer">
+                <i class="fa-solid fa-shield-halved"></i> Role-Based Access Control &bull; Powered by MongoDB &amp; Python Flask
             </div>
         </div>
     </div>
 
     <script>
-        function togglePasswordVisibility() {
-            const pwdInput = document.getElementById('login_password');
-            const icon = document.getElementById('pwd_toggle_icon');
+        function switchAuthTab(tabId) {
+            // Remove active from all tabs & buttons
+            document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            document.querySelectorAll('.auth-tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+
+            // Activate chosen tab
+            const targetBtn = document.getElementById('tabBtn-' + tabId);
+            const targetPane = document.getElementById('pane-' + tabId);
+
+            if (targetBtn && targetPane) {
+                targetBtn.classList.add('active');
+                targetBtn.setAttribute('aria-selected', 'true');
+                targetPane.classList.add('active');
+                // Update URL query string without reloading page
+                const newUrl = window.location.pathname + '?tab=' + tabId;
+                window.history.replaceState({ tab: tabId }, '', newUrl);
+            }
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const pwdInput = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (!pwdInput || !icon) return;
             if (pwdInput.type === 'password') {
                 pwdInput.type = 'text';
                 icon.classList.remove('fa-eye');
@@ -301,8 +768,24 @@
                 icon.classList.add('fa-eye');
             }
         }
+
+        function generateNewId() {
+            const input = document.getElementById('reg_student_id');
+            if (!input) return;
+            // Generate a random 10-digit number starting with 10
+            const randomSuffix = Math.floor(10000000 + Math.random() * 90000000);
+            input.value = '10' + String(randomSuffix).substring(0, 8);
+        }
+
+        // Handle URL hash or param on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab');
+            if (tabParam && ['student', 'register', 'librarian'].includes(tabParam)) {
+                switchAuthTab(tabParam);
+            }
+        });
     </script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
-
