@@ -66,12 +66,10 @@ def inject_status():
     }
 
 
-# Librarian & Student Authentication (Login & Registration Portal)
+# Librarian & Student Authentication (Sign In Portal)
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Unified Login and Registration Portal for Librarians and Students."""
-    _, students_col, _ = get_collections()
-
+    """Sign In Portal for Librarians and Students."""
     if request.method == "POST":
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "").strip()
@@ -88,19 +86,10 @@ def login():
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid email or password. Access is restricted to authorized librarians.", "error")
-            return render_template(
-                "login.html",
-                active_tab="librarian",
-                new_student_id=generate_student_id(students_col)
-            )
+            return render_template("login.html", active_tab="librarian")
 
-    active_tab = request.args.get("tab", "student")
-    new_student_id = generate_student_id(students_col)
-    return render_template(
-        "login.html",
-        active_tab=active_tab,
-        new_student_id=new_student_id
-    )
+    active_tab = request.args.get("tab", "librarian")
+    return render_template("login.html", active_tab=active_tab)
 
 
 @app.route("/logout")
